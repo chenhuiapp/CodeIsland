@@ -1,0 +1,51 @@
+name: Build MioIsland
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Checkout CodeLight dependency
+        run: git clone --depth 1 https://github.com/xmqywx/CodeLight.git ../CodeLight
+
+      - name: Build
+        run: |
+          xcodebuild \
+            -project ClaudeIsland.xcodeproj \
+            -scheme ClaudeIsland \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            DEVELOPMENT_TEAM="" \
+            MACOSX_DEPLOYMENT_TARGET=15.0
+      - name: Package DMG
+        run: |
+          APP_PATH=$(find build -name "*.app" -maxdepth 5 | head -1)
+          APP_NAME=$(basename "$APP_PATH" .app)
+          mkdir dmg_src
+          cp -r "$APP_PATH" dmg_src/
+          ln -s /Applications dmg_src/Applications
+          hdiutil create \
+            -volname "$APP_NAME" \
+            -srcfolder dmg_src \
+            -ov \
+            -format UDZO \
+            "${APP_NAME}.dmg"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MioIsland
+          path: "*.dmg"
+          retention-days: 7
