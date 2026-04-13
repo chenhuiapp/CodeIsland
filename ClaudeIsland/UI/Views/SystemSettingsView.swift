@@ -426,7 +426,7 @@ private struct GeneralTab: View {
                 }
             }
 
-            SettingsCard(title: L10n.tr("Anthropic API Proxy", "Anthropic API 代理")) {
+            SettingsCard(title: L10n.anthropicApiProxy) {
                 AnthropicProxyRow()
             }
 
@@ -441,14 +441,14 @@ private struct GeneralTab: View {
     }
 }
 
-/// Text field for configuring an HTTP(S) proxy used only for Anthropic's
-/// usage API (RateLimitMonitor). Leave empty to connect directly.
+/// Text field for configuring an HTTP(S) proxy for Anthropic API traffic.
+/// See the explanatory Text below for exact scope.
 private struct AnthropicProxyRow: View {
     @AppStorage("anthropicProxyURL") private var proxyURL: String = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            TextField("http://127.0.0.1:7890", text: $proxyURL)
+            TextField(L10n.anthropicApiProxyPlaceholder, text: $proxyURL)
                 .textFieldStyle(.plain)
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundColor(.white.opacity(0.95))
@@ -463,13 +463,10 @@ private struct AnthropicProxyRow: View {
                         .strokeBorder(Color.white.opacity(0.12), lineWidth: 0.5)
                 )
 
-            Text(L10n.tr(
-                "Applied only to api.anthropic.com (usage / rate limit). Your own sync server stays direct. Leave empty to connect directly.",
-                "仅用于 api.anthropic.com（用量 / 额度查询）。CodeLight 同步服务器始终直连。留空即直连。"
-            ))
-            .font(.system(size: 10))
-            .foregroundColor(.white.opacity(0.5))
-            .fixedSize(horizontal: false, vertical: true)
+            Text(L10n.anthropicApiProxyDescription)
+                .font(.system(size: 10))
+                .foregroundColor(.white.opacity(0.5))
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
