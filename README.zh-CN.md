@@ -129,15 +129,26 @@ MioIsland 现在自带**插件系统**，配套的插件市场托管在 **[miomi
 
 ## 安装
 
-从 [Releases](https://github.com/MioMioOS/MioIsland/releases) 下载最新 `.zip` → 解压 → 拖到「应用程序」。
-
-首次打开：**右键 → 打开 → 再点打开**。或终端运行：
+### Homebrew（推荐）
 
 ```bash
-xattr -dr com.apple.quarantine "/Applications/Code Island.app"
+brew install --cask xmqywx/codeisland/codeisland
 ```
 
-系统要求：macOS 15+，带刘海的 MacBook。
+cask 会自动处理 Gatekeeper,装完直接双击打开即可。
+
+### 手动下载
+
+从 [Releases](https://github.com/MioMioOS/MioIsland/releases) 下载最新 `.zip` → 解压 → 拖到「应用程序」。
+
+CodeIsland 为**未签名**构建,macOS Gatekeeper 会拦截首次打开。二选一:
+
+- **右键** `Code Island.app` → **打开** → 再点**打开**,或者
+- 终端运行一次: `xattr -dr com.apple.quarantine "/Applications/Code Island.app"`
+
+之后双击直接开。
+
+系统要求:macOS 15+,带刘海的 MacBook。
 
 <details>
 <summary><b>从源码构建</b></summary>

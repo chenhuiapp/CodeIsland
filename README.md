@@ -330,14 +330,24 @@ MioIsland auto-detects your terminal from the process tree:
 
 ## Install
 
-**Download** the latest `.zip` from [Releases](https://github.com/MioMioOS/MioIsland/releases), unzip, and drag `Code Island.app` to `/Applications`.
+### Homebrew (recommended)
 
-**First launch:** The app is code-signed with our Developer ID but not yet notarized by Apple (we're working with Apple to resolve a server-side configuration issue). You need to do one of the following on first launch:
+```bash
+brew install --cask xmqywx/codeisland/codeisland
+```
 
-- **Right-click** → **Open** → click **Open** in the dialog (recommended), or
-- Run in Terminal: `xattr -dr com.apple.quarantine "/Applications/Code Island.app"`
+The cask handles Gatekeeper automatically — you can launch the app with a normal double-click right after install.
 
-After the first launch, subsequent opens work normally with a double-click.
+### Manual download
+
+Grab the latest `.zip` from [Releases](https://github.com/MioMioOS/MioIsland/releases), unzip, and drag `Code Island.app` to `/Applications`.
+
+CodeIsland ships **unsigned**, so macOS Gatekeeper will block the first launch. Do **one** of the following:
+
+- **Right-click** `Code Island.app` → **Open** → click **Open** in the dialog, **or**
+- Run once in Terminal: `xattr -dr com.apple.quarantine "/Applications/Code Island.app"`
+
+Subsequent launches work normally with a double-click.
 
 ### Requirements
 
