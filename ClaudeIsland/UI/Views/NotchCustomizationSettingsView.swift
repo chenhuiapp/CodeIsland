@@ -9,10 +9,10 @@
 //  so the visual style matches the surrounding cards exactly.
 //
 //  The visual constants here are intentionally kept in sync with
-//  `SystemSettingsView`'s private `Theme` enum (font sizes 12 for
-//  labels, 12 for icons, sidebarFill = #CAFF00 for the lime accent,
-//  inner row corner radius 7) so the rows look identical to the
-//  TabToggle / SettingsCard rows in the rest of the popup.
+//  `SystemSettingsView`'s private `Theme` enum (Workspace Mono
+//  palette, font sizes 12 for labels/icons, inner row corner
+//  radius 7) so the rows look identical to the TabToggle /
+//  SettingsCard rows in the rest of the popup.
 //
 //  Spec: docs/superpowers/specs/2026-04-08-notch-customization-design.md
 //  sections 4.1, 4.5, 4.6.
@@ -23,7 +23,12 @@ import SwiftUI
 struct NotchCustomizationSettingsView: View {
     @ObservedObject private var store: NotchCustomizationStore = .shared
 
-    private static let brandLime = Color(red: 0xCA/255, green: 0xFF/255, blue: 0x00/255)
+    // Workspace Mono palette — matches SystemSettingsView.Theme
+    private static let detailText = Color(red: 0x1A/255, green: 0x1A/255, blue: 0x1A/255)
+    private static let subtle = Color(red: 0x8A/255, green: 0x8A/255, blue: 0x8A/255)
+    private static let cardFill = Color(red: 0xF0/255, green: 0xF0/255, blue: 0xEE/255)
+    private static let cardBorder = Color(red: 0xE0/255, green: 0xE0/255, blue: 0xE0/255)
+    private static let accent = Color(red: 0x34/255, green: 0xC7/255, blue: 0x59/255)
 
     var body: some View {
         // The enclosing SettingsCard already provides the title,
@@ -81,16 +86,16 @@ struct NotchCustomizationSettingsView: View {
                         .fill(NotchPalette.for(store.customization.theme).bg)
                         .overlay(
                             Circle()
-                                .strokeBorder(Color.white.opacity(0.3), lineWidth: 0.5)
+                                .strokeBorder(Self.cardBorder, lineWidth: 0.5)
                         )
                         .frame(width: 12, height: 12)
                         .accessibilityHidden(true)
                     Text(L10n.notchThemeName(store.customization.theme))
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.white.opacity(0.95))
+                        .foregroundColor(Self.detailText.opacity(0.95))
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.system(size: 9))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(Self.subtle)
                 }
             }
             .buttonStyle(.plain)
@@ -113,7 +118,7 @@ struct NotchCustomizationSettingsView: View {
             }
             .padding(2)
             .background(
-                RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.06))
+                RoundedRectangle(cornerRadius: 6).fill(Self.cardFill)
             )
         }
     }
@@ -128,13 +133,13 @@ struct NotchCustomizationSettingsView: View {
         } label: {
             Text(shortLabel)
                 .font(.system(size: 11, weight: store.customization.fontScale == scale ? .bold : .medium))
-                .foregroundColor(store.customization.fontScale == scale ? .black : .white.opacity(0.7))
+                .foregroundColor(store.customization.fontScale == scale ? .white : Self.detailText.opacity(0.7))
                 .frame(minWidth: 26)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 4)
                 .background(
                     RoundedRectangle(cornerRadius: 5)
-                        .fill(store.customization.fontScale == scale ? Self.brandLime : Color.clear)
+                        .fill(store.customization.fontScale == scale ? Self.detailText : Color.clear)
                 )
         }
         .buttonStyle(.plain)
@@ -152,7 +157,7 @@ struct NotchCustomizationSettingsView: View {
             }
             .padding(2)
             .background(
-                RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.06))
+                RoundedRectangle(cornerRadius: 6).fill(Self.cardFill)
             )
         }
     }
@@ -166,13 +171,13 @@ struct NotchCustomizationSettingsView: View {
         } label: {
             Text(shortLabel)
                 .font(.system(size: 11, weight: store.customization.hoverSpeed == speed ? .bold : .medium))
-                .foregroundColor(store.customization.hoverSpeed == speed ? .black : .white.opacity(0.7))
+                .foregroundColor(store.customization.hoverSpeed == speed ? .white : Self.detailText.opacity(0.7))
                 .frame(minWidth: 30)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 4)
                 .background(
                     RoundedRectangle(cornerRadius: 5)
-                        .fill(store.customization.hoverSpeed == speed ? Self.brandLime : Color.clear)
+                        .fill(store.customization.hoverSpeed == speed ? Self.detailText : Color.clear)
                 )
         }
         .buttonStyle(.plain)
@@ -191,27 +196,27 @@ struct NotchCustomizationSettingsView: View {
             HStack(spacing: 10) {
                 Image(systemName: icon)
                     .font(.system(size: 12))
-                    .foregroundColor(.white.opacity(isOn ? 0.9 : 0.5))
+                    .foregroundColor(Self.detailText.opacity(isOn ? 0.9 : 0.5))
                     .frame(width: 16)
                 Text(label)
                     .font(.system(size: 12, weight: isOn ? .semibold : .medium))
-                    .foregroundColor(.white.opacity(isOn ? 0.95 : 0.7))
+                    .foregroundColor(Self.detailText.opacity(isOn ? 0.95 : 0.7))
                     .lineLimit(1)
                 Spacer(minLength: 0)
                 Circle()
-                    .fill(isOn ? Self.brandLime : Color.white.opacity(0.18))
+                    .fill(isOn ? Self.accent : Self.subtle.opacity(0.3))
                     .frame(width: 7, height: 7)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 7)
-                    .fill(isOn ? Self.brandLime.opacity(0.10) : Color.white.opacity(0.03))
+                    .fill(isOn ? Self.detailText.opacity(0.06) : Self.cardFill)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 7)
                     .strokeBorder(
-                        isOn ? Self.brandLime.opacity(0.25) : Color.white.opacity(0.08),
+                        isOn ? Self.detailText.opacity(0.15) : Self.cardBorder,
                         lineWidth: 0.5
                     )
             )
@@ -238,10 +243,10 @@ struct NotchCustomizationSettingsView: View {
                             : L10n.notchHardwareForceVirtual
                     )
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.white.opacity(0.95))
+                    .foregroundColor(Self.detailText.opacity(0.95))
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.system(size: 9))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(Self.subtle)
                 }
             }
             .buttonStyle(.plain)
@@ -268,11 +273,16 @@ struct NotchCustomizationSettingsView: View {
                     .font(.system(size: 11, weight: .semibold))
                     .opacity(0.85)
             }
-            .foregroundColor(.black)
+            .foregroundColor(Self.detailText)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background(
-                RoundedRectangle(cornerRadius: 7).fill(Self.brandLime)
+                RoundedRectangle(cornerRadius: 7)
+                    .fill(Color.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 7)
+                            .strokeBorder(Self.cardBorder, lineWidth: 0.5)
+                    )
             )
         }
         .buttonStyle(.plain)
@@ -294,22 +304,22 @@ struct NotchCustomizationSettingsView: View {
         HStack(spacing: 10) {
             Image(systemName: icon)
                 .font(.system(size: 12))
-                .foregroundColor(.white.opacity(0.5))
+                .foregroundColor(Self.subtle)
                 .frame(width: 16)
             Text(label)
                 .font(.system(size: 12, weight: .medium))
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundColor(Self.detailText.opacity(0.7))
             Spacer(minLength: 0)
             trailing()
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .background(
-            RoundedRectangle(cornerRadius: 7).fill(Color.white.opacity(0.03))
+            RoundedRectangle(cornerRadius: 7).fill(Self.cardFill)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 7)
-                .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
+                .strokeBorder(Self.cardBorder, lineWidth: 0.5)
         )
     }
 }

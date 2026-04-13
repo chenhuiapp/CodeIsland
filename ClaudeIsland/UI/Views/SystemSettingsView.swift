@@ -11,12 +11,13 @@
 //  a new case to `SettingsTab`, a new content view, and a single line
 //  in the dispatcher.
 //
-//  Theme: solid brand lime (#CAFF00) surface with near-black text,
-//  matching the Pair phone QR popup.
+//  Theme: Workspace Mono styling with a warm white sidebar and
+//  a clean white detail panel.
 //
 
 import AppKit
 import ApplicationServices
+import Combine
 import ServiceManagement
 import SwiftUI
 
@@ -50,7 +51,7 @@ struct SystemSettingsRow: View {
             .contentShape(Rectangle())
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isHovered ? Color.white.opacity(0.08) : Color.clear)
+                    .fill(isHovered ? Color.black.opacity(0.05) : Color.clear)
             )
         }
         .buttonStyle(.plain)
@@ -151,24 +152,91 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 
 // MARK: - Shared theming constants
 
-/// Two-surface theme: the sidebar is a bold lime strip, the detail area is
-/// a dark panel so the content doesn't feel retina-burning. This also
-/// matches the existing dark-themed embedded rows (ScreenPickerRow, etc.)
-/// without forcing a colorScheme override on them.
+/// Two-surface theme: warm white sidebar, clean white detail surface.
 private enum Theme {
-    // Brand lime — ONLY used on the sidebar surface.
-    static let sidebarFill = Color(red: 0xCA/255, green: 0xFF/255, blue: 0x00/255)
-    static let sidebarText = Color.black
-    static let sidebarSelected = Color.black.opacity(0.85)
-    static let sidebarSelectedText = Color(red: 0xCA/255, green: 0xFF/255, blue: 0x00/255)
-    static let sidebarBorder = Color.black.opacity(0.12)
+    // Workspace Mono — warm white sidebar, clean white detail.
+    static let sidebarFill = Color(red: 0xF5/255, green: 0xF5/255, blue: 0xF3/255)
+    static let sidebarText = Color(red: 0x1A/255, green: 0x1A/255, blue: 0x1A/255)
+    static let sidebarSelected = Color(red: 0x1A/255, green: 0x1A/255, blue: 0x1A/255)
+    static let sidebarSelectedText = Color(red: 0xF5/255, green: 0xF5/255, blue: 0xF3/255)
+    static let sidebarBorder = Color(red: 0xE0/255, green: 0xE0/255, blue: 0xE0/255)
 
-    // Dark panel — used for the detail area, cards, toggles, text.
-    static let detailFill = Color(red: 0.10, green: 0.10, blue: 0.11)
-    static let detailText = Color.white
-    static let cardFill = Color.white.opacity(0.04)
-    static let cardBorder = Color.white.opacity(0.08)
-    static let subtle = Color.white.opacity(0.5)
+    // Clean white detail area
+    static let detailFill = Color.white
+    static let detailText = Color(red: 0x1A/255, green: 0x1A/255, blue: 0x1A/255)
+    static let cardFill = Color(red: 0xF0/255, green: 0xF0/255, blue: 0xEE/255)
+    static let cardBorder = Color(red: 0xE0/255, green: 0xE0/255, blue: 0xE0/255)
+    static let subtle = Color(red: 0x8A/255, green: 0x8A/255, blue: 0x8A/255)
+    static let accent = Color(red: 0x34/255, green: 0xC7/255, blue: 0x59/255)   // green active indicator
+}
+
+private struct AnimatedGIFView: NSViewRepresentable {
+    let data: Data
+
+    func makeNSView(context: Context) -> NSView {
+        let container = NSView()
+        container.wantsLayer = true
+        container.layer?.masksToBounds = true
+
+        let imageView = NSImageView()
+        imageView.animates = true
+        imageView.imageScaling = .scaleProportionallyDown
+        imageView.imageAlignment = .alignCenter
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        imageView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+
+        container.addSubview(imageView)
+        NSLayoutConstraint.activate([
+            imageView.topAnchor.constraint(equalTo: container.topAnchor),
+            imageView.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            imageView.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            imageView.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+        ])
+        return container
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        guard let imageView = nsView.subviews.first as? NSImageView else { return }
+        imageView.image = NSImage(data: data)
+    }
+}
+
+private struct GIFCyclerView: View {
+    @State private var currentIndex = 0
+
+    private let gifData = Self.loadGIFData()
+    private let timer = Timer.publish(every: 8, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        ZStack {
+            if let currentGIF {
+                AnimatedGIFView(data: currentGIF)
+                    .id(currentIndex)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.6), value: currentIndex)
+        .onReceive(timer) { _ in
+            guard gifData.count > 1 else { return }
+            currentIndex = (currentIndex + 1) % gifData.count
+        }
+    }
+
+    private var currentGIF: Data? {
+        guard !gifData.isEmpty else { return nil }
+        return gifData[currentIndex]
+    }
+
+    private static func loadGIFData() -> [Data] {
+        ["illus_2", "illus_3", "illus_4"].compactMap { name in
+            guard let url = Bundle.main.url(forResource: name, withExtension: "gif") else {
+                return nil
+            }
+
+            return try? Data(contentsOf: url)
+        }
+    }
 }
 
 // MARK: - Content root
@@ -186,8 +254,8 @@ private struct SystemSettingsContentView: View {
 
     var body: some View {
         // IMPORTANT: clipShape BEFORE overlay so the rounded corners actually
-        // cut the sidebar's opaque lime fill and the detail's dark fill,
-        // then the overlay border is stroked on the clipped edge on top.
+        // cut both opaque surface fills, then the overlay border is stroked
+        // on the clipped edge on top.
         // Putting shadow OUTSIDE the clip so it isn't cut off.
         HStack(spacing: 0) {
             sidebar
@@ -197,7 +265,7 @@ private struct SystemSettingsContentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5)
+                .strokeBorder(Theme.cardBorder, lineWidth: 0.5)
         )
         .shadow(color: .black.opacity(0.5), radius: 30, y: 12)
     }
@@ -225,6 +293,13 @@ private struct SystemSettingsContentView: View {
             }
 
             Spacer()
+
+            GIFCyclerView()
+                .frame(height: 140)
+                .clipped()
+                .padding(.horizontal, 12)
+                .padding(.bottom, 16)
+                .opacity(0.8)
 
             // Close button at bottom
             Button {
@@ -301,6 +376,7 @@ private struct SystemSettingsContentView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.detailFill)
+        .environment(\.colorScheme, .light)
     }
 }
 
@@ -343,7 +419,7 @@ private struct SettingsCard<Content: View>: View {
     }
 }
 
-/// Dark-themed toggle cell — lime dot when on, matching the sidebar accent.
+/// Toggle cell styled for the Workspace Mono detail surface.
 private struct TabToggle: View {
     let icon: String
     let label: String
@@ -355,25 +431,25 @@ private struct TabToggle: View {
             HStack(spacing: 10) {
                 Image(systemName: icon)
                     .font(.system(size: 12))
-                    .foregroundColor(.white.opacity(isOn ? 0.9 : 0.5))
+                    .foregroundColor(Theme.detailText.opacity(isOn ? 0.9 : 0.5))
                     .frame(width: 16)
                 Text(label)
                     .font(.system(size: 12, weight: isOn ? .semibold : .medium))
-                    .foregroundColor(.white.opacity(isOn ? 0.95 : 0.7))
+                    .foregroundColor(Theme.detailText.opacity(isOn ? 0.95 : 0.7))
                 Spacer(minLength: 0)
                 Circle()
-                    .fill(isOn ? Theme.sidebarFill : Color.white.opacity(0.18))
+                    .fill(isOn ? Theme.accent : Theme.subtle.opacity(0.3))
                     .frame(width: 7, height: 7)
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 7)
-                    .fill(isOn ? Theme.sidebarFill.opacity(0.1) : Color.white.opacity(0.03))
+                    .fill(isOn ? Theme.sidebarSelected.opacity(0.06) : Theme.cardFill)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 7)
-                    .strokeBorder(isOn ? Theme.sidebarFill.opacity(0.25) : Color.white.opacity(0.08), lineWidth: 0.5)
+                    .strokeBorder(isOn ? Theme.sidebarSelected.opacity(0.15) : Theme.cardBorder, lineWidth: 0.5)
             )
         }
         .buttonStyle(.plain)
@@ -546,8 +622,8 @@ private struct CodeLightTab: View {
                           : "iphone.slash")
                         .font(.system(size: 14))
                         .foregroundColor(syncManager.isEnabled
-                                         ? Theme.sidebarFill
-                                         : Color.white.opacity(0.4))
+                                         ? Theme.sidebarSelected
+                                         : Theme.subtle)
                         .frame(width: 18)
 
                     VStack(alignment: .leading, spacing: 2) {
@@ -555,16 +631,16 @@ private struct CodeLightTab: View {
                            !url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                             Text(URL(string: url)?.host ?? url)
                                 .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.white.opacity(0.9))
+                                .foregroundColor(Theme.detailText.opacity(0.9))
                             Text(syncManager.isEnabled
                                  ? (L10n.isChinese ? "在线" : "Online")
                                  : (L10n.isChinese ? "未连接" : "Not connected"))
                                 .font(.system(size: 10))
-                                .foregroundColor(.white.opacity(0.5))
+                                .foregroundColor(Theme.subtle)
                         } else {
                             Text(L10n.isChinese ? "尚未配置服务器" : "No server configured")
                                 .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.white.opacity(0.7))
+                                .foregroundColor(Theme.detailText.opacity(0.7))
                         }
                     }
 
@@ -592,7 +668,7 @@ private struct CodeLightTab: View {
             }
 
             SettingsCard(title: L10n.launchPresetsSection) {
-                PresetsListContent(textStyle: .darkOnLight(false))
+                PresetsListContent(textStyle: .darkOnLight(true))
                     .frame(minHeight: 280)
             }
         }
@@ -620,7 +696,7 @@ private struct AdvancedTab: View {
                     .padding(.vertical, 9)
                     .background(
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.white.opacity(0.06))
+                            .fill(Theme.cardFill)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
                                     .strokeBorder(Theme.cardBorder, lineWidth: 0.5)
@@ -679,7 +755,7 @@ private struct AboutTab: View {
                 HStack(spacing: 10) {
                     Image(systemName: "sparkles")
                         .font(.system(size: 16))
-                        .foregroundColor(Color(red: 0xCA/255, green: 0xFF/255, blue: 0x00/255))
+                        .foregroundColor(Theme.sidebarSelected)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(L10n.pluginMarketplaceTitle)
                             .font(.system(size: 12, weight: .semibold))
@@ -699,12 +775,12 @@ private struct AboutTab: View {
                             Image(systemName: "arrow.up.right")
                                 .font(.system(size: 9, weight: .bold))
                         }
-                        .foregroundColor(.black)
+                        .foregroundColor(.white)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .background(
                             RoundedRectangle(cornerRadius: 6)
-                                .fill(Color(red: 0xCA/255, green: 0xFF/255, blue: 0x00/255))
+                                .fill(Theme.sidebarSelected)
                         )
                     }
                     .buttonStyle(.plain)

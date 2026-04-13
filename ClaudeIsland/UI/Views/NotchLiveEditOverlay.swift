@@ -54,7 +54,7 @@ struct NotchLiveEditOverlay: View {
     /// down the window.
     var onExit: () -> Void = {}
 
-    private let neonGreen = Color(hex: "CAFF00")
+    private let neonGreen = Color(red: 0xF5/255, green: 0xF5/255, blue: 0xF3/255)  // Workspace Mono warm white
     private let neonPink  = Color(hex: "FB7185")
 
     /// Approximate visible notch height. The hardware notch is

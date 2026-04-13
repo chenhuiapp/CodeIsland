@@ -171,17 +171,17 @@ struct AccessibilityRow: View {
 
                 Text(L10n.enabled)
                     .font(.system(size: 11))
-                    .foregroundColor(.white.opacity(0.4))
+                    .foregroundColor(.primary.opacity(0.4))
             } else {
                 Button(action: openAccessibilitySettings) {
                     Text(L10n.enable)
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.black)
+                        .foregroundColor(.primary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
                         .background(
                             RoundedRectangle(cornerRadius: 5)
-                                .fill(Color.white)
+                                .fill(Color.primary.opacity(0.1))
                         )
                 }
                 .buttonStyle(.plain)
@@ -191,7 +191,7 @@ struct AccessibilityRow: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(isHovered ? Color.white.opacity(0.08) : Color.clear)
+                .fill(isHovered ? Color.primary.opacity(0.08) : Color.clear)
         )
         .onHover { isHovered = $0 }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
@@ -200,7 +200,7 @@ struct AccessibilityRow: View {
     }
 
     private var textColor: Color {
-        .white.opacity(isHovered ? 1.0 : 0.7)
+        .primary.opacity(isHovered ? 1.0 : 0.7)
     }
 
     private func openAccessibilitySettings() {
@@ -331,17 +331,17 @@ struct LanguageRow: View {
 
                     Text(L10n.currentLanguageLabel)
                         .font(.system(size: 11))
-                        .foregroundColor(.white.opacity(0.4))
+                        .foregroundColor(.primary.opacity(0.7))
 
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.system(size: 9))
-                        .foregroundColor(.white.opacity(0.3))
+                        .foregroundColor(.primary.opacity(0.5))
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(isHovered ? Color.white.opacity(0.08) : Color.clear)
+                        .fill(isHovered ? Color.primary.opacity(0.08) : Color.clear)
                 )
             }
             .buttonStyle(.plain)
@@ -357,7 +357,7 @@ struct LanguageRow: View {
                             HStack {
                                 Text(option.label)
                                     .font(.system(size: 12))
-                                    .foregroundColor(.white.opacity(0.7))
+                                    .foregroundColor(.primary.opacity(0.7))
                                 Spacer()
                                 if current == option.id {
                                     Image(systemName: "checkmark")
@@ -367,7 +367,7 @@ struct LanguageRow: View {
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 6)
-                            .background(Color.white.opacity(0.03))
+                            .background(Color.primary.opacity(0.03))
                         }
                         .buttonStyle(.plain)
                     }
@@ -378,7 +378,7 @@ struct LanguageRow: View {
     }
 
     private var textColor: Color {
-        .white.opacity(isHovered ? 1.0 : 0.7)
+        .primary.opacity(isHovered ? 1.0 : 0.7)
     }
 }
 
@@ -415,12 +415,12 @@ struct ThresholdPickerRow: View {
                     } label: {
                         Text(option.label)
                             .font(.system(size: 10, weight: threshold == option.value ? .bold : .regular))
-                            .foregroundColor(threshold == option.value ? .white : .white.opacity(0.4))
+                            .foregroundColor(threshold == option.value ? .primary : .primary.opacity(0.4))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 3)
                             .background(
                                 RoundedRectangle(cornerRadius: 4)
-                                    .fill(threshold == option.value ? Color.white.opacity(0.15) : Color.clear)
+                                    .fill(threshold == option.value ? Color.primary.opacity(0.15) : Color.clear)
                             )
                     }
                     .buttonStyle(.plain)
@@ -431,12 +431,12 @@ struct ThresholdPickerRow: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(isHovered ? Color.white.opacity(0.08) : Color.clear)
+                .fill(isHovered ? Color.primary.opacity(0.08) : Color.clear)
         )
         .onHover { isHovered = $0 }
     }
 
     private var textColor: Color {
-        .white.opacity(isHovered ? 1.0 : 0.7)
+        .primary.opacity(isHovered ? 1.0 : 0.7)
     }
 }
