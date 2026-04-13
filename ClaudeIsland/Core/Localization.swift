@@ -40,6 +40,59 @@ enum L10n {
     // Settings
     static var language: String { tr("Language", "语言") }
 
+    // MARK: - Rate limit notification (RateLimitMonitor)
+
+    static var rateLimitNotificationTitle: String {
+        tr("Claude Code Usage Warning", "Claude Code 用量警告")
+    }
+    static func rateLimitNotificationBody(window: String, percent: Int) -> String {
+        tr(
+            "\(window) window usage has reached \(percent)%.",
+            "\(window) 窗口用量已达 \(percent)%。"
+        )
+    }
+    static func rateLimitNotificationBodyWithReset(window: String, percent: Int, resetHint: String) -> String {
+        tr(
+            "\(window) window usage has reached \(percent)%. Resets in \(resetHint).",
+            "\(window) 窗口用量已达 \(percent)%，\(resetHint)后重置。"
+        )
+    }
+
+    // MARK: - Short duration formatting (<1min / 5min / 1h23m / 3d)
+    // Used by RateLimitMonitor to render "resets in X" hints.
+
+    static var durationLessThanOneMinute: String {
+        tr("<1min", "<1分钟")
+    }
+    static func durationMinutes(_ m: Int) -> String {
+        tr("\(m)min", "\(m)分钟")
+    }
+    static func durationHoursMinutes(_ h: Int, _ m: Int) -> String {
+        tr("\(h)h\(m)m", "\(h)小时\(m)分钟")
+    }
+    static func durationHours(_ h: Int) -> String {
+        tr("\(h)h", "\(h)小时")
+    }
+    static func durationDays(_ d: Int) -> String {
+        tr("\(d)d", "\(d)天")
+    }
+
+    // MARK: - Notch menu
+
+    static var alertThreshold: String {
+        tr("Alert", "警告阈值")
+    }
+
+    // MARK: - Chat processing indicator
+    //
+    // Note: the existing `working` entry below is "Working..." with a
+    // trailing ellipsis (used in static labels). This new entry is bare
+    // "Working" because ProcessingIndicatorView animates dots separately
+    // on top of the base text.
+    static var workingBaseLabel: String {
+        tr("Working", "工作中")
+    }
+
     // MARK: - Anthropic API Proxy (Settings → General)
 
     static var anthropicApiProxy: String {
@@ -115,6 +168,41 @@ enum L10n {
     static var tabAbout: String { tr("About", "关于") }
     static var tabPresets: String { tr("Launch Presets", "启动预设") }
     static var tabCodeLight: String { tr("CodeLight", "CodeLight") }
+    static var tabCmuxConnection: String { tr("cmux Connection", "cmux 连接") }
+    static var tabLogs: String { tr("Logs", "日志") }
+
+    // cmux connection tab
+    static var cmuxTabHeader: String { tr("Diagnose the relay between your iPhone and the terminal.", "诊断手机和终端之间的消息转发链路。") }
+    static var cmuxBinaryRow: String { tr("cmux CLI", "cmux 命令行") }
+    static var cmuxBinaryFound: String { tr("Found", "已找到") }
+    static var cmuxBinaryMissing: String { tr("Not installed at /Applications/cmux.app", "未安装在 /Applications/cmux.app") }
+    static var accessibilityRowTitle: String { tr("Accessibility permission", "辅助功能权限") }
+    static var accessibilityGranted: String { tr("Granted", "已授权") }
+    static var accessibilityDenied: String { tr("Not granted — AppleScript relays will silently fail", "未授权 — AppleScript 转发会静默失败") }
+    static var automationRowTitle: String { tr("Automation permission", "自动化权限") }
+    static var automationUnknown: String { tr("Will be requested on next send", "下次发送时会请求") }
+    static var runningClaudeCount: String { tr("Detected Claude sessions", "检测到的 Claude 会话数") }
+    static var testSendButton: String { tr("Test send", "测试发送") }
+    static var testSending: String { tr("Sending…", "发送中…") }
+    static var testSendSuccess: String { tr("✓ Delivered", "✓ 已送达") }
+    static var testSendNoTarget: String { tr("No cmux-hosted Claude session detected", "没有检测到 cmux 里的 Claude 会话") }
+    static var testSendFailed: String { tr("Failed — check logs tab", "失败 — 请查看日志 tab") }
+    static var openAccessibilitySettings: String { tr("Open Accessibility settings", "打开辅助功能设置") }
+    static var openAutomationSettings: String { tr("Open Automation settings", "打开自动化设置") }
+    static var refreshStatus: String { tr("Refresh", "刷新") }
+    static var requestAutomationButton: String { tr("Request Automation permission", "请求自动化权限") }
+    static var requestAutomationNoTerminal: String { tr("No supported terminal is running — start cmux/iTerm/Terminal first", "没有受支持的终端在运行 — 请先启动 cmux/iTerm/Terminal") }
+    static var requestAutomationPrompted: String { tr("Dialog shown — approve it, then tap Refresh", "已触发弹窗 — 请同意后点刷新") }
+    static var requestAutomationDenied: String { tr("Dialog denied or still missing permission", "弹窗被拒或权限仍缺失") }
+
+    // logs tab
+    static var logsHeader: String { tr("Real-time log output. Use this when submitting issues.", "实时日志输出。提交 issue 时请附上。") }
+    static var logsCopyAll: String { tr("Copy all", "复制全部") }
+    static var logsOpenFile: String { tr("Reveal file", "打开文件夹") }
+    static var logsSubmitIssue: String { tr("Submit GitHub issue", "提交 GitHub issue") }
+    static var logsCopied: String { tr("Copied", "已复制") }
+    static var logsIssueClipboardNotice: String { tr("Full log copied to clipboard — paste below", "完整日志已复制到剪贴板 — 请粘贴到下方") }
+    static var logsEmpty: String { tr("Log is empty. Interact with CodeIsland to generate entries.", "日志为空。操作 CodeIsland 会产生日志。") }
     static var pairedIPhones: String { tr("Paired iPhones", "已配对 iPhone") }
     static var pairNewPhone: String { tr("Pair New iPhone", "配对新 iPhone") }
     static var launchPresetsSection: String { tr("Launch Presets", "启动预设") }
