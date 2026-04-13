@@ -150,6 +150,17 @@ CodeIsland 为**未签名**构建,macOS Gatekeeper 会拦截首次打开。二�
 
 系统要求:macOS 15+,带刘海的 MacBook。
 
+### HTTP 代理(国内网络受限环境)
+
+`设置 → 通用 → Anthropic API Proxy` 可以让 Code Island 对 Anthropic API 的请求都走你本地的 HTTP 代理(比如 `http://127.0.0.1:7890`)。在本地跑 Clash / V2Ray 的开发者,直连不稳时用得上。
+
+**这个设置**会被应用到:
+- ✅ 刘海里的额度条(`RateLimitMonitor` → `api.anthropic.com/api/oauth/usage`)
+- ✅ Stats 插件的 "Editor's Note" AI 日报。插件会读同一个配置,把 `HTTPS_PROXY` / `HTTP_PROXY` / `ALL_PROXY` **只**注入到它 spawn 的 `claude` CLI 子进程的环境里 —— 模仿 Claude Code 自己的 shell function wrapper,不污染全局 env
+- ❌ **不**作用于 CodeLight iPhone 同步(我们自己的服务器 `island.wdao.chat`,直连最快,走代理反而增加延迟和故障点)
+
+**不需要**跑 `launchctl setenv HTTPS_PROXY ...` —— 在 Settings 里填上就够了,作用精准。不填就是直连。
+
 <details>
 <summary><b>从源码构建</b></summary>
 
