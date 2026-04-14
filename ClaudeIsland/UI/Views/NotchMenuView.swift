@@ -137,9 +137,10 @@ struct VersionRow: View {
     }
 }
 
-// MARK: - Accessibility Permission Row
+// MARK: - Notch-only Rows
+// These rows intentionally use notch-menu styling and are not reused by the settings window.
 
-struct AccessibilityRow: View {
+private struct AccessibilityRow: View {
     let isEnabled: Bool
 
     @State private var isHovered = false
@@ -299,7 +300,7 @@ struct MenuToggleRow: View {
 
 // MARK: - Language Picker
 
-struct LanguageRow: View {
+private struct LanguageRow: View {
     @State private var isExpanded = false
     @State private var isHovered = false
     @State private var current = L10n.appLanguage
@@ -384,7 +385,7 @@ struct LanguageRow: View {
 
 // MARK: - Threshold Picker Row
 
-struct ThresholdPickerRow: View {
+private struct ThresholdPickerRow: View {
     @Binding var threshold: Int
     @State private var isHovered = false
 
