@@ -880,46 +880,50 @@ private struct AboutTab: View {
 /// that used to leave users with "phone says sent, cmux shows nothing".
 private struct CmuxConnectionTab: View {
     @EnvironmentObject private var themeStore: SettingsThemeStore
-    @State private var probe: TerminalWriter.ConnectionProbe?
-    @State private var isRefreshing = false
-    @State private var testState: TestState = .idle
-    @State private var testDetail: String = ""
-    @State private var automationState: AutomationState = .idle
-    @State private var automationDetail: String = ""
-
-    enum TestState { case idle, sending, done }
-    enum AutomationState { case idle, requesting, done }
+    @StateObject private var viewModel = CmuxConnectionViewModel()
 
     var body: some View {
+        let snapshot = viewModel.snapshot
+        let isRefreshing = viewModel.isLoading
+
         VStack(alignment: .leading, spacing: 14) {
             Text(L10n.cmuxTabHeader)
                 .font(.system(size: 11))
                 .foregroundColor(themeStore.palette.subtle)
 
+            if case .error(message: let message, previous: _) = viewModel.state {
+                SettingsCard {
+                    Text(message)
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(themeStore.palette.statusError)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
             SettingsCard {
                 statusRow(
                     icon: "terminal.fill",
                     title: L10n.cmuxBinaryRow,
-                    ok: probe?.cmuxBinaryInstalled ?? false,
-                    detail: (probe?.cmuxBinaryInstalled ?? false) ? L10n.cmuxBinaryFound : L10n.cmuxBinaryMissing
+                    ok: snapshot?.cmuxBinaryInstalled,
+                    detail: snapshot.map { $0.cmuxBinaryInstalled ? L10n.cmuxBinaryFound : L10n.cmuxBinaryMissing } ?? "—"
                 )
                 statusRow(
                     icon: "accessibility",
                     title: L10n.accessibilityRowTitle,
-                    ok: probe?.accessibilityGranted ?? false,
-                    detail: (probe?.accessibilityGranted ?? false) ? L10n.accessibilityGranted : L10n.accessibilityDenied
+                    ok: snapshot?.accessibilityGranted,
+                    detail: snapshot.map { $0.accessibilityGranted ? L10n.accessibilityGranted : L10n.accessibilityDenied } ?? "—"
                 )
                 statusRow(
                     icon: "gearshape.2",
                     title: L10n.automationRowTitle,
-                    ok: probe?.automationGranted,
-                    detail: probe?.automationDetail ?? L10n.automationUnknown
+                    ok: snapshot?.automationGranted,
+                    detail: snapshot?.automationDetail ?? L10n.automationUnknown
                 )
                 statusRow(
                     icon: "person.crop.rectangle.stack",
                     title: L10n.runningClaudeCount,
-                    ok: (probe?.claudeSessionCount ?? 0) > 0,
-                    detail: "\(probe?.claudeSessionCount ?? 0)"
+                    ok: snapshot.map { $0.claudeSessionCount > 0 },
+                    detail: snapshot.map { "\($0.claudeSessionCount)" } ?? "—"
                 )
             }
 
@@ -927,15 +931,15 @@ private struct CmuxConnectionTab: View {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 10) {
                         Button {
-                            Task { await runTest() }
+                            Task { await viewModel.sendTest() }
                         } label: {
                             HStack(spacing: 6) {
-                                if testState == .sending {
+                                if viewModel.testAction == .running {
                                     ProgressView().scaleEffect(0.5).frame(width: 12, height: 12)
                                 } else {
                                     Image(systemName: "paperplane.fill").font(.system(size: 11))
                                 }
-                                Text(testState == .sending ? L10n.testSending : L10n.testSendButton)
+                                Text(viewModel.testAction == .running ? L10n.testSending : L10n.testSendButton)
                                     .font(.system(size: 12, weight: .semibold))
                             }
                             .foregroundColor(themeStore.palette.accentText)
@@ -944,10 +948,10 @@ private struct CmuxConnectionTab: View {
                             .background(RoundedRectangle(cornerRadius: 8).fill(themeStore.palette.accent))
                         }
                         .buttonStyle(.plain)
-                        .disabled(testState == .sending)
+                        .disabled(viewModel.testAction == .running)
 
                         Button {
-                            Task { await refresh() }
+                            Task { await viewModel.refresh() }
                         } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: "arrow.clockwise").font(.system(size: 11))
@@ -962,8 +966,8 @@ private struct CmuxConnectionTab: View {
                         .disabled(isRefreshing)
                     }
 
-                    if testState == .done, !testDetail.isEmpty {
-                        Text(testDetail)
+                    if case .done(let detail) = viewModel.testAction, !detail.isEmpty {
+                        Text(detail)
                             .font(.system(size: 11, design: .monospaced))
                             .foregroundColor(themeStore.palette.detailText.opacity(0.75))
                             .fixedSize(horizontal: false, vertical: true)
@@ -981,10 +985,10 @@ private struct CmuxConnectionTab: View {
                     // tapping this dispatches a no-op `activate` AppleEvent
                     // to the first running terminal, surfacing the TCC dialog.
                     Button {
-                        Task { await requestAutomation() }
+                        Task { await viewModel.requestAutomation() }
                     } label: {
                         HStack(spacing: 8) {
-                            if automationState == .requesting {
+                            if viewModel.automationAction == .running {
                                 ProgressView().scaleEffect(0.5).frame(width: 11, height: 11)
                             } else {
                                 Image(systemName: "hand.raised.fill").font(.system(size: 11))
@@ -1003,10 +1007,10 @@ private struct CmuxConnectionTab: View {
                         )
                     }
                     .buttonStyle(.plain)
-                    .disabled(automationState == .requesting)
+                    .disabled(viewModel.automationAction == .running)
 
-                    if automationState == .done, !automationDetail.isEmpty {
-                        Text(automationDetail)
+                    if case .done(let detail) = viewModel.automationAction, !detail.isEmpty {
+                        Text(detail)
                             .font(.system(size: 10))
                             .foregroundColor(themeStore.palette.detailText.opacity(0.6))
                             .fixedSize(horizontal: false, vertical: true)
@@ -1014,15 +1018,7 @@ private struct CmuxConnectionTab: View {
                 }
             }
         }
-        .task { await refresh() }
-    }
-
-    private func requestAutomation() async {
-        automationState = .requesting
-        automationDetail = ""
-        let (_, detail) = await TerminalWriter.shared.requestAutomationPermission()
-        automationDetail = detail
-        automationState = .done
+        .task { await viewModel.loadIfNeeded() }
     }
 
     @ViewBuilder
@@ -1080,24 +1076,6 @@ private struct CmuxConnectionTab: View {
         .buttonStyle(.plain)
     }
 
-    private func refresh() async {
-        isRefreshing = true
-        let p = await TerminalWriter.shared.probeConnection()
-        self.probe = p
-        isRefreshing = false
-    }
-
-    private func runTest() async {
-        testState = .sending
-        testDetail = ""
-        let (ok, detail) = await TerminalWriter.shared.testSendDiagnostic()
-        testDetail = detail
-        testState = .done
-        // Also refresh the status rows while we're at it.
-        let p = await TerminalWriter.shared.probeConnection()
-        self.probe = p
-        _ = ok
-    }
 }
 
 // MARK: - Logs tab

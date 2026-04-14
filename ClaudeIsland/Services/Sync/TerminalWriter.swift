@@ -105,25 +105,28 @@ final class TerminalWriter {
     /// phone message landing in cmux". Non-invasive — does not write to any
     /// terminal.
     func probeConnection() async -> ConnectionProbe {
-        let cmuxOk = FileManager.default.isExecutableFile(atPath: self.cmuxPath)
-        let axOk = AXIsProcessTrusted()
-        let procs = await listClaudeProcesses()
-        var firstTarget: (workspaceId: String, surfaceId: String?)?
-        for proc in procs {
-            if let t = await readCmuxIDs(forPid: proc.pid) {
-                firstTarget = t
-                break
-            }
+        let service = CmuxConnectionDiagnosticsService()
+        do {
+            let snapshot = try await service.loadSnapshot()
+            return ConnectionProbe(
+                cmuxBinaryInstalled: snapshot.cmuxBinaryInstalled,
+                accessibilityGranted: snapshot.accessibilityGranted,
+                claudeSessionCount: snapshot.claudeSessionCount,
+                automationGranted: snapshot.automationGranted,
+                automationDetail: snapshot.automationDetail,
+                testTarget: snapshot.testTarget.map { ($0.workspaceId, $0.surfaceId) }
+            )
+        } catch {
+            Self.logger.warning("probeConnection failed: \(error.localizedDescription, privacy: .public)")
+            return ConnectionProbe(
+                cmuxBinaryInstalled: false,
+                accessibilityGranted: false,
+                claudeSessionCount: 0,
+                automationGranted: nil,
+                automationDetail: error.localizedDescription,
+                testTarget: nil
+            )
         }
-        let (autoOk, autoDetail) = probeAutomationPermission()
-        return ConnectionProbe(
-            cmuxBinaryInstalled: cmuxOk,
-            accessibilityGranted: axOk,
-            claudeSessionCount: procs.count,
-            automationGranted: autoOk,
-            automationDetail: autoDetail,
-            testTarget: firstTarget
-        )
     }
 
     /// Non-invasive probe for Automation (AppleEvents) TCC permission. Uses
@@ -221,56 +224,13 @@ final class TerminalWriter {
     /// NSAppleScriptErrorNumber so we can diagnose TCC edge cases from the
     /// UI without opening Console.
     func requestAutomationPermission() async -> (ok: Bool, detail: String) {
-        // Probe order matches TerminalJumper — cmux first since it's the
-        // primary relay target.
-        let candidates: [(bundleId: String, label: String)] = [
-            ("com.cmuxterm.app", "cmux"),
-            ("com.googlecode.iterm2", "iTerm"),
-            ("com.mitchellh.ghostty", "Ghostty"),
-            ("com.apple.Terminal", "Terminal")
-        ]
-        for (bundleId, label) in candidates {
-            guard !NSRunningApplication.runningApplications(withBundleIdentifier: bundleId).isEmpty else { continue }
-
-            let source = "tell application id \"\(bundleId)\" to activate"
-            let script = NSAppleScript(source: source)
-            var errorInfo: NSDictionary?
-            _ = script?.executeAndReturnError(&errorInfo)
-
-            if errorInfo == nil {
-                return (true, "\(L10n.requestAutomationPrompted) (\(label))")
-            }
-            // Surface the raw error so we can tell "prompt shown, user denied"
-            // (err -1743) from "script parse failure" from "target not
-            // running" — they all need different fixes.
-            let errNum = (errorInfo?["NSAppleScriptErrorNumber"] as? Int) ?? 0
-            let errMsg = (errorInfo?["NSAppleScriptErrorMessage"] as? String) ?? "?"
-            return (false, "\(L10n.requestAutomationDenied) (\(label) · err=\(errNum) · \(errMsg))")
-        }
-        return (false, L10n.requestAutomationNoTerminal)
+        await CmuxConnectionDiagnosticsService().requestAutomationPermission()
     }
 
     /// Send a fixed diagnostic probe line to the first detected cmux target.
     /// Returns a human-readable result string that the UI can show directly.
     func testSendDiagnostic() async -> (ok: Bool, detail: String) {
-        let probe = await probeConnection()
-        guard probe.cmuxBinaryInstalled else {
-            return (false, L10n.cmuxBinaryMissing)
-        }
-        guard let (wsId, surfId) = probe.testTarget else {
-            return (false, L10n.testSendNoTarget)
-        }
-        // Deliberately empty-ish payload that won't spam the user's terminal:
-        // a single `#` comment line which most shells treat as a no-op.
-        var args = ["send", "--workspace", wsId]
-        if let surfId { args += ["--surface", surfId] }
-        args += ["--", "# CodeIsland probe\r"]
-        let result = await cmuxRun(args)
-        if result != nil {
-            return (true, "\(L10n.testSendSuccess) — ws=\(wsId.prefix(8)) surf=\(surfId?.prefix(8).description ?? "-")")
-        } else {
-            return (false, L10n.testSendFailed)
-        }
+        await CmuxConnectionDiagnosticsService().sendDiagnosticProbe()
     }
 
     // MARK: - Relay entry points
