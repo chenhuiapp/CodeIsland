@@ -18,7 +18,6 @@
 
 import AppKit
 import ApplicationServices
-import Combine
 import ServiceManagement
 import SwiftUI
 
@@ -76,7 +75,6 @@ final class SystemSettingsWindow {
     static let shared = SystemSettingsWindow()
 
     private var window: NSWindow?
-    private var cancellables = Set<AnyCancellable>()
 
     func show(initialTab: SettingsTab = .general) {
         if let existing = window {
@@ -115,30 +113,9 @@ final class SystemSettingsWindow {
         w.makeKeyAndOrderFront(nil)
         w.isReleasedWhenClosed = false
         self.window = w
-
-        applyAppearance(for: store, on: w)
-        store.$activeThemeId
-            .combineLatest(store.$palette)
-            .receive(on: RunLoop.main)
-            .sink { [weak self, weak w] _, _ in
-                guard let self, let w else { return }
-                self.applyAppearance(for: store, on: w)
-            }
-            .store(in: &cancellables)
-    }
-
-    private func applyAppearance(for store: SettingsThemeStore, on w: NSWindow) {
-        guard store.activeThemeId != nil else {
-            w.appearance = nil
-            return
-        }
-        w.appearance = NSAppearance(
-            named: store.palette.colorScheme == .light ? .aqua : .darkAqua
-        )
     }
 
     func close() {
-        cancellables.removeAll()
         window?.close()
         window = nil
     }
@@ -605,18 +582,18 @@ private struct ThemePickerCard: View {
 
                     Text(currentSelectionLabel)
                         .font(.system(size: 11))
-                        .foregroundColor(themeStore.palette.detailText.opacity(0.4))
+                        .foregroundColor(.white.opacity(0.4))
                         .lineLimit(1)
 
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.system(size: 10))
-                        .foregroundColor(themeStore.palette.detailText.opacity(0.4))
+                        .foregroundColor(.white.opacity(0.4))
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(isHovered ? themeStore.palette.hover : Color.clear)
+                        .fill(isHovered ? Color.white.opacity(0.08) : Color.clear)
                 )
             }
             .buttonStyle(.plain)
@@ -626,8 +603,7 @@ private struct ThemePickerCard: View {
                 VStack(spacing: 2) {
                     ThemeOptionRow(
                         label: "Default",
-                        isSelected: themeStore.activeThemeId == nil,
-                        palette: themeStore.palette
+                        isSelected: themeStore.activeThemeId == nil
                     ) {
                         themeStore.reset()
                         collapseAfterDelay()
@@ -636,8 +612,7 @@ private struct ThemePickerCard: View {
                     ForEach(sortedThemeIds, id: \.self) { id in
                         ThemeOptionRow(
                             label: pluginName(for: id) ?? id,
-                            isSelected: themeStore.activeThemeId == id,
-                            palette: themeStore.palette
+                            isSelected: themeStore.activeThemeId == id
                         ) {
                             guard let entry = pluginManager.settingsThemeConfigs[id] else { return }
                             themeStore.activate(
@@ -661,7 +636,7 @@ private struct ThemePickerCard: View {
     }
 
     private var textColor: Color {
-        themeStore.palette.detailText.opacity(isHovered ? 1.0 : 0.7)
+        .white.opacity(isHovered ? 1.0 : 0.7)
     }
 
     private var sortedThemeIds: [String] {
@@ -684,7 +659,6 @@ private struct ThemePickerCard: View {
 private struct ThemeOptionRow: View {
     let label: String
     let isSelected: Bool
-    let palette: SettingsThemePalette
     let action: () -> Void
 
     @State private var isHovered = false
@@ -693,26 +667,26 @@ private struct ThemeOptionRow: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Circle()
-                    .fill(isSelected ? palette.accent : palette.detailText.opacity(0.2))
+                    .fill(isSelected ? TerminalColors.green : Color.white.opacity(0.2))
                     .frame(width: 6, height: 6)
 
                 Text(label)
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(palette.detailText.opacity(isHovered ? 1.0 : 0.7))
+                    .foregroundColor(.white.opacity(isHovered ? 1.0 : 0.7))
 
                 Spacer()
 
                 if isSelected {
                     Image(systemName: "checkmark")
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(palette.accent)
+                        .foregroundColor(TerminalColors.green)
                 }
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(isHovered ? palette.detailText.opacity(0.06) : Color.clear)
+                    .fill(isHovered ? Color.white.opacity(0.06) : Color.clear)
             )
         }
         .buttonStyle(.plain)

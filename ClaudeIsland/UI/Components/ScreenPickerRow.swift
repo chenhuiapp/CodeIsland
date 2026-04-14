@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ScreenPickerRow: View {
     @ObservedObject var screenSelector: ScreenSelector
-    @EnvironmentObject private var themeStore: SettingsThemeStore
     @State private var isHovered = false
 
     private var isExpanded: Bool {
@@ -42,18 +41,18 @@ struct ScreenPickerRow: View {
 
                     Text(currentSelectionLabel)
                         .font(.system(size: 11))
-                        .foregroundColor(themeStore.palette.detailText.opacity(0.4))
+                        .foregroundColor(.white.opacity(0.4))
                         .lineLimit(1)
 
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.system(size: 10))
-                        .foregroundColor(themeStore.palette.detailText.opacity(0.4))
+                        .foregroundColor(.white.opacity(0.4))
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(isHovered ? themeStore.palette.hover : Color.clear)
+                        .fill(isHovered ? Color.white.opacity(0.08) : Color.clear)
                 )
             }
             .buttonStyle(.plain)
@@ -66,8 +65,7 @@ struct ScreenPickerRow: View {
                     ScreenOptionRow(
                         label: L10n.automatic,
                         sublabel: L10n.builtInOrMain,
-                        isSelected: screenSelector.selectionMode == .automatic,
-                        palette: themeStore.palette
+                        isSelected: screenSelector.selectionMode == .automatic
                     ) {
                         screenSelector.selectAutomatic()
                         triggerWindowRecreation()
@@ -80,8 +78,7 @@ struct ScreenPickerRow: View {
                             label: screen.localizedName,
                             sublabel: screenSublabel(for: screen),
                             isSelected: screenSelector.selectionMode == .specificScreen &&
-                                       screenSelector.isSelected(screen),
-                            palette: themeStore.palette
+                                       screenSelector.isSelected(screen)
                         ) {
                             screenSelector.selectScreen(screen)
                             triggerWindowRecreation()
@@ -108,7 +105,7 @@ struct ScreenPickerRow: View {
     }
 
     private var textColor: Color {
-        themeStore.palette.detailText.opacity(isHovered ? 1.0 : 0.7)
+        .white.opacity(isHovered ? 1.0 : 0.7)
     }
 
     private func screenSublabel(for screen: NSScreen) -> String? {
@@ -145,7 +142,6 @@ private struct ScreenOptionRow: View {
     let label: String
     let sublabel: String?
     let isSelected: Bool
-    let palette: SettingsThemePalette
     let action: () -> Void
 
     @State private var isHovered = false
@@ -154,18 +150,18 @@ private struct ScreenOptionRow: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Circle()
-                    .fill(isSelected ? palette.accent : palette.detailText.opacity(0.2))
+                    .fill(isSelected ? TerminalColors.green : Color.white.opacity(0.2))
                     .frame(width: 6, height: 6)
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text(label)
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(palette.detailText.opacity(isHovered ? 1.0 : 0.7))
+                        .foregroundColor(.white.opacity(isHovered ? 1.0 : 0.7))
 
                     if let sublabel = sublabel {
                         Text(sublabel)
                             .font(.system(size: 10))
-                            .foregroundColor(palette.detailText.opacity(0.4))
+                            .foregroundColor(.white.opacity(0.4))
                     }
                 }
 
@@ -174,14 +170,14 @@ private struct ScreenOptionRow: View {
                 if isSelected {
                     Image(systemName: "checkmark")
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(palette.accent)
+                        .foregroundColor(TerminalColors.green)
                 }
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(isHovered ? palette.detailText.opacity(0.06) : Color.clear)
+                    .fill(isHovered ? Color.white.opacity(0.06) : Color.clear)
             )
         }
         .buttonStyle(.plain)

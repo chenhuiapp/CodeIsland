@@ -10,7 +10,6 @@ import SwiftUI
 
 struct SoundPickerRow: View {
     @ObservedObject var soundSelector: SoundSelector
-    @EnvironmentObject private var themeStore: SettingsThemeStore
     @State private var isHovered = false
     @State private var selectedSound: NotificationSound = AppSettings.notificationSound
 
@@ -44,18 +43,18 @@ struct SoundPickerRow: View {
 
                     Text(selectedSound.rawValue)
                         .font(.system(size: 11))
-                        .foregroundColor(themeStore.palette.detailText.opacity(0.4))
+                        .foregroundColor(.white.opacity(0.4))
                         .lineLimit(1)
 
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.system(size: 10))
-                        .foregroundColor(themeStore.palette.detailText.opacity(0.4))
+                        .foregroundColor(.white.opacity(0.4))
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(
                     RoundedRectangle(cornerRadius: 8)
-                        .fill(isHovered ? themeStore.palette.hover : Color.clear)
+                        .fill(isHovered ? Color.white.opacity(0.08) : Color.clear)
                 )
             }
             .buttonStyle(.plain)
@@ -68,8 +67,7 @@ struct SoundPickerRow: View {
                         ForEach(NotificationSound.allCases, id: \.self) { sound in
                             SoundOptionRowInline(
                                 sound: sound,
-                                isSelected: selectedSound == sound,
-                                palette: themeStore.palette
+                                isSelected: selectedSound == sound
                             ) {
                                 // Play preview sound
                                 if let soundName = sound.soundName {
@@ -92,7 +90,7 @@ struct SoundPickerRow: View {
     }
 
     private var textColor: Color {
-        themeStore.palette.detailText.opacity(isHovered ? 1.0 : 0.7)
+        .white.opacity(isHovered ? 1.0 : 0.7)
     }
 }
 
@@ -101,7 +99,6 @@ struct SoundPickerRow: View {
 private struct SoundOptionRowInline: View {
     let sound: NotificationSound
     let isSelected: Bool
-    let palette: SettingsThemePalette
     let action: () -> Void
 
     @State private var isHovered = false
@@ -110,26 +107,26 @@ private struct SoundOptionRowInline: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Circle()
-                    .fill(isSelected ? palette.accent : palette.detailText.opacity(0.2))
+                    .fill(isSelected ? TerminalColors.green : Color.white.opacity(0.2))
                     .frame(width: 6, height: 6)
 
                 Text(sound.rawValue)
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(palette.detailText.opacity(isHovered ? 1.0 : 0.7))
+                    .foregroundColor(.white.opacity(isHovered ? 1.0 : 0.7))
 
                 Spacer()
 
                 if isSelected {
                     Image(systemName: "checkmark")
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(palette.accent)
+                        .foregroundColor(TerminalColors.green)
                 }
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(isHovered ? palette.detailText.opacity(0.06) : Color.clear)
+                    .fill(isHovered ? Color.white.opacity(0.06) : Color.clear)
             )
         }
         .buttonStyle(.plain)
