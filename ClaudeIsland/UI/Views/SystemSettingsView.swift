@@ -174,6 +174,7 @@ private struct SystemSettingsContentView: View {
     let initialTab: SettingsTab
     let onClose: () -> Void
     @EnvironmentObject private var themeStore: SettingsThemeStore
+    @AppStorage("appLanguage") private var appLanguage: String = "auto"
     @State private var tab: SettingsTab
 
     init(initialTab: SettingsTab = .general, onClose: @escaping () -> Void) {
@@ -183,6 +184,8 @@ private struct SystemSettingsContentView: View {
     }
 
     var body: some View {
+        // Ensure the entire settings tree re-renders when language changes.
+        let _ = appLanguage
         // IMPORTANT: clipShape BEFORE overlay so the rounded corners actually
         // cut the sidebar's opaque lime fill and the detail's dark fill,
         // then the overlay border is stroked on the clipped edge on top.
@@ -475,12 +478,71 @@ private struct GeneralTab: View {
             }
 
             SettingsCard(title: L10n.language) {
-                LanguageRow()
+                SettingsLanguagePickerRow()
             }
 
             SettingsCard(title: L10n.accessibility) {
-                AccessibilityRow(isEnabled: AXIsProcessTrusted())
+                SettingsAccessibilityCard(isEnabled: AXIsProcessTrusted())
             }
+        }
+    }
+}
+
+private struct SettingsAccessibilityCard: View {
+    let isEnabled: Bool
+
+    @State private var currentlyEnabled: Bool
+    @EnvironmentObject private var themeStore: SettingsThemeStore
+
+    init(isEnabled: Bool) {
+        self.isEnabled = isEnabled
+        self._currentlyEnabled = State(initialValue: isEnabled)
+    }
+
+    var body: some View {
+        SettingsPermissionRow(icon: "hand.raised", title: L10n.accessibility) {
+            if currentlyEnabled {
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(themeStore.palette.statusOk)
+                        .frame(width: 6, height: 6)
+
+                    Text(L10n.enabled)
+                        .font(.system(size: 11))
+                        .foregroundColor(themeStore.palette.subtle)
+                }
+            } else {
+                Button(action: openAccessibilitySettings) {
+                    Text(L10n.enable)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(themeStore.palette.accentText)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 5)
+                                .fill(themeStore.palette.accent)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 5)
+                                .strokeBorder(themeStore.palette.toggleOnBorder, lineWidth: 0.5)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .onAppear {
+            // The caller passes an initial snapshot; re-check on appear in
+            // case system settings changed since the view was constructed.
+            currentlyEnabled = AXIsProcessTrusted()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            currentlyEnabled = AXIsProcessTrusted()
+        }
+    }
+
+    private func openAccessibilitySettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
         }
     }
 }
