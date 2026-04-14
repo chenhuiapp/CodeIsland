@@ -759,17 +759,15 @@ private struct ThemeOptionRow: View {
 // MARK: - Notifications tab
 
 private struct NotificationsTab: View {
-    @ObservedObject private var soundSelector = SoundSelector.shared
     @AppStorage("usageWarningThreshold") private var usageWarningThreshold: Int = 90
-    @EnvironmentObject private var themeStore: SettingsThemeStore
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             SettingsCard(title: L10n.notificationSound) {
-                SoundPickerRow(soundSelector: soundSelector)
+                SettingsSoundPickerRow(soundSelector: SoundSelector.shared)
             }
             SettingsCard(title: L10n.usageWarningThreshold) {
-                ThresholdPickerRow(threshold: $usageWarningThreshold)
+                SettingsUsageWarningRow(threshold: $usageWarningThreshold)
             }
         }
     }
