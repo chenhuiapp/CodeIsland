@@ -3,11 +3,66 @@ set -euo pipefail
 
 fail=0
 
+search_matches() {
+  local pattern="$1"
+  shift
+
+  if command -v rg >/dev/null 2>&1; then
+    rg -n -- "$pattern" "$@"
+    return $?
+  fi
+
+  CHECK_SETTINGS_PATTERN="$pattern" perl - "$@" <<'PERL'
+use strict;
+use warnings;
+use File::Find;
+
+my $pattern = $ENV{CHECK_SETTINGS_PATTERN};
+my $regex = qr/$pattern/;
+my $matched = 0;
+
+my $scan_file = sub {
+    my ($file) = @_;
+
+    open my $fh, '<', $file or die "ERROR: failed to read $file: $!\n";
+    my $line_number = 0;
+    while (my $line = <$fh>) {
+        $line_number++;
+        if ($line =~ /$regex/) {
+            print "${file}:${line_number}:${line}";
+            $matched = 1;
+        }
+    }
+};
+
+for my $path (@ARGV) {
+    if (-d $path) {
+        find(
+            {
+                no_chdir => 1,
+                wanted => sub {
+                    return unless -f $_;
+                    $scan_file->($File::Find::name);
+                },
+            },
+            $path
+        );
+    } elsif (-f $path) {
+        $scan_file->($path);
+    } else {
+        die "ERROR: search path does not exist: $path\n";
+    }
+}
+
+exit($matched ? 0 : 1);
+PERL
+}
+
 check_no_matches() {
   local pattern="$1"
   shift
 
-  if rg -n -- "$pattern" "$@"; then
+  if search_matches "$pattern" "$@"; then
     echo >&2
     echo "ERROR: Forbidden pattern matched: $pattern" >&2
     echo "Searched paths: $*" >&2
@@ -15,7 +70,7 @@ check_no_matches() {
   else
     local status=$?
     if [[ $status -ne 1 ]]; then
-      echo "ERROR: rg failed with status $status while searching: $pattern" >&2
+      echo "ERROR: search failed with status $status while searching: $pattern" >&2
       exit "$status"
     fi
   fi
