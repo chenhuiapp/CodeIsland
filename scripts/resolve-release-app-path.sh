@@ -10,7 +10,6 @@ if [[ $# -eq 0 ]]; then
     xcodebuild \
       -project ClaudeIsland.xcodeproj \
       -scheme ClaudeIsland \
-      -target ClaudeIsland \
       -configuration Release \
       -derivedDataPath build \
       CODE_SIGN_IDENTITY="-" \

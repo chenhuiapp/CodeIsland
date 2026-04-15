@@ -52,4 +52,10 @@ if ! grep -Fx -- "ClaudeIsland" "$args_file" >/dev/null; then
   exit 1
 fi
 
+if grep -Fx -- "-target" "$args_file" >/dev/null; then
+  echo "xcodebuild invocation should not pass -target when using -scheme" >&2
+  cat "$args_file" >&2
+  exit 1
+fi
+
 echo "ok scheme"
