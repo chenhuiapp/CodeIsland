@@ -9,6 +9,7 @@ if [[ $# -eq 0 ]]; then
   build_settings="$(
     xcodebuild \
       -project ClaudeIsland.xcodeproj \
+      -scheme ClaudeIsland \
       -target ClaudeIsland \
       -configuration Release \
       -derivedDataPath build \
