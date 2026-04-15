@@ -880,7 +880,7 @@ final class TerminalWriter {
                   line == "\(pid)" else { continue }
 
             // Prefer cwd from the JSON; fall back to lsof if absent.
-            let cwd: String
+            let cwd: String?
             if let configCwd = json["cwd"] as? String {
                 cwd = configCwd
             } else {
