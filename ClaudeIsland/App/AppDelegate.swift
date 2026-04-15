@@ -88,6 +88,17 @@ import UserNotifications
         _ = windowManager?.setupNotchWindow()
     }
 
+    /// Used by the settings screen picker when the user changes the target screen.
+    /// This is intentionally separate from `NSApplication.didChangeScreenParametersNotification`
+    /// to avoid spoofing a global hardware-change notification.
+    func recreateNotchWindowForSettingsScreenChange() {
+        let store = NotchCustomizationStore.shared
+        if store.isEditing {
+            store.cancelEdit()
+        }
+        handleScreenChange()
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         screenObserver = nil
     }

@@ -18,6 +18,9 @@ jobs:
       - name: Checkout CodeLight dependency
         run: git clone --depth 1 https://github.com/xmqywx/CodeLight.git ../CodeLight
 
+      - name: Check settings theme regressions
+        run: bash scripts/check-settings-theme-regressions.sh
+
       - name: Build
         run: |
           xcodebuild \

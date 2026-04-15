@@ -86,7 +86,6 @@ final class SystemSettingsWindow {
         let store = SettingsThemeStore.shared
         let contentView = SystemSettingsContentView(initialTab: initialTab) { self.close() }
             .environmentObject(store)
-            .environment(\.colorScheme, store.palette.colorScheme)
         let hostingView = NSHostingView(rootView: contentView)
         let w = KeyableSettingsWindow(
             contentRect: NSRect(x: 0, y: 0, width: 720, height: 560),
@@ -194,6 +193,9 @@ private struct SystemSettingsContentView: View {
             sidebar
             detail
         }
+        // Keep SwiftUI/system-styled descendants in sync with the theme's
+        // current scheme without freezing it at NSHostingView creation.
+        .environment(\.colorScheme, themeStore.palette.colorScheme)
         .frame(width: 720, height: 560)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(

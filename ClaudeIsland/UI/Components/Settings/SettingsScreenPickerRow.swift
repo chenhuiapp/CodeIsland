@@ -4,7 +4,7 @@
 //
 //  Palette-driven screen selection picker for the settings window.
 //  Preserves automatic vs explicit selection, built-in/main sublabels,
-//  screen-parameter notifications, and delayed collapse.
+//  and delayed collapse.
 //
 
 import AppKit
@@ -77,10 +77,9 @@ struct SettingsScreenPickerRow: View {
     }
 
     private func triggerWindowRecreation() {
-        NotificationCenter.default.post(
-            name: NSApplication.didChangeScreenParametersNotification,
-            object: nil
-        )
+        Task { @MainActor in
+            (NSApp.delegate as? AppDelegate)?.recreateNotchWindowForSettingsScreenChange()
+        }
     }
 
     private func collapseAfterDelay() {
