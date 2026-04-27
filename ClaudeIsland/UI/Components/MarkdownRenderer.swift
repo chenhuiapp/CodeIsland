@@ -49,6 +49,7 @@ struct MarkdownText: View {
 
     private let document: Document
 
+    @MainActor
     init(_ text: String, color: Color = markdownTheme().chatBodyText, fontSize: CGFloat = 13) {
         self.text = text
         self.baseColor = color

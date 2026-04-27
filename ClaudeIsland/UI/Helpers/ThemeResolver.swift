@@ -11,6 +11,7 @@ struct ThemeResolver {
     let theme: NotchThemeID
     let tokens: ThemeTokens
 
+    @MainActor
     init(theme: NotchThemeID) {
         self.theme = theme
         self.tokens = ThemeTokens.for(theme)

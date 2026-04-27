@@ -34,6 +34,7 @@ extension NotchPalette {
     /// Lookup the palette for a given theme ID. All cases are
     /// defined inline so adding a theme means touching exactly one
     /// switch statement.
+    @MainActor
     static func `for`(_ id: NotchThemeID) -> NotchPalette {
         let tokens = ThemeTokens.for(id)
         return NotchPalette(

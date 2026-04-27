@@ -239,6 +239,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 /// only as an accent on toggles, active sidebar icons, and focus rings.
 /// Palette is lifted from the Anthropic-style reference design — see
 /// `~/Desktop/1_files/UI.jsx` and the System Settings HTML mock.
+@MainActor
 enum Theme {
     private static var resolver: ThemeResolver { settingsTheme() }
     private static var appPalette: AppThemePalette { currentAppThemePalette() }
