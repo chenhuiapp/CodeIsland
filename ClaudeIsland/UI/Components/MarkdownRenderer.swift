@@ -49,8 +49,12 @@ struct MarkdownText: View {
 
     private let document: Document
 
-    @MainActor
-    init(_ text: String, color: Color = markdownTheme().chatBodyText, fontSize: CGFloat = 13) {
+    // The previous default `color: Color = markdownTheme().chatBodyText`
+    // doesn't work under SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor: default
+    // expressions are evaluated at the caller's isolation, and
+    // markdownTheme() is @MainActor. Both existing callers pass `color:`
+    // explicitly, so dropping the default doesn't change any call site.
+    init(_ text: String, color: Color, fontSize: CGFloat = 13) {
         self.text = text
         self.baseColor = color
         self.fontSize = fontSize
