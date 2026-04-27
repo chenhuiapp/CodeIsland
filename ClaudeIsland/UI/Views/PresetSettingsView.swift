@@ -8,6 +8,7 @@
 
 import SwiftUI
 
+@MainActor
 private func presetTheme() -> ThemeResolver {
     ThemeResolver(theme: NotchCustomizationStore.shared.customization.theme)
 }

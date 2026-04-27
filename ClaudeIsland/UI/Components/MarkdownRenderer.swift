@@ -8,6 +8,7 @@
 import Markdown
 import SwiftUI
 
+@MainActor
 private func markdownTheme() -> ThemeResolver {
     ThemeResolver(theme: NotchCustomizationStore.shared.customization.theme)
 }

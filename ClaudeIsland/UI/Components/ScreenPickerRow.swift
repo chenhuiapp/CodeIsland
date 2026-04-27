@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 private func screenPickerTheme() -> ThemeResolver {
     ThemeResolver(theme: NotchCustomizationStore.shared.customization.theme)
 }

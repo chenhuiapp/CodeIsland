@@ -8,6 +8,7 @@
 import AppKit
 import SwiftUI
 
+@MainActor
 private func soundPickerTheme() -> ThemeResolver {
     ThemeResolver(theme: NotchCustomizationStore.shared.customization.theme)
 }

@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 private func activeToolTheme() -> ThemeResolver {
     ThemeResolver(theme: NotchCustomizationStore.shared.customization.theme)
 }

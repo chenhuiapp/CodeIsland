@@ -77,6 +77,7 @@ struct ThemeTokens: Equatable, Codable {
 }
 
 extension ThemeTokens {
+    @MainActor
     static func `for`(_ id: NotchThemeID) -> ThemeTokens {
         ThemeRegistry.shared.descriptor(for: id).tokens
     }

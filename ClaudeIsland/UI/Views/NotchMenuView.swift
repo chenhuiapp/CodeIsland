@@ -10,6 +10,7 @@ import Combine
 import SwiftUI
 import ServiceManagement
 
+@MainActor
 private func menuTheme() -> ThemeResolver {
     ThemeResolver(theme: NotchCustomizationStore.shared.customization.theme)
 }

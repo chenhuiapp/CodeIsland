@@ -20,8 +20,17 @@ import ApplicationServices
 import ServiceManagement
 import SwiftUI
 
+@MainActor
 private func settingsTheme() -> ThemeResolver {
     ThemeResolver(theme: NotchCustomizationStore.shared.customization.theme)
+}
+
+/// Mirrors `settingsTheme()` — `enum Theme`'s static accessors call into
+/// a top-level @MainActor-isolated function rather than reading the
+/// @MainActor-protected store directly.
+@MainActor
+private func currentAppThemePalette() -> AppThemePalette {
+    AppThemeStore.shared.palette
 }
 
 // MARK: - Notch menu entry row
@@ -232,7 +241,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 /// `~/Desktop/1_files/UI.jsx` and the System Settings HTML mock.
 enum Theme {
     private static var resolver: ThemeResolver { settingsTheme() }
-    private static var appPalette: AppThemePalette { AppThemeStore.shared.palette }
+    private static var appPalette: AppThemePalette { currentAppThemePalette() }
 
     // Sidebar / detail surfaces derive from the App Theme palette when an
     // App Theme is active; any role left nil falls through to the notch

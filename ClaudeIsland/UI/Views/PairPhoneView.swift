@@ -8,6 +8,7 @@
 import SwiftUI
 import CoreImage.CIFilterBuiltins
 
+@MainActor
 private func pairPhoneTheme() -> ThemeResolver {
     ThemeResolver(theme: NotchCustomizationStore.shared.customization.theme)
 }

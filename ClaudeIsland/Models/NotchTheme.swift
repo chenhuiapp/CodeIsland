@@ -49,6 +49,7 @@ extension NotchThemeID {
     /// Human-readable English display name for the theme picker.
     /// Localized display names are resolved separately in the
     /// settings view so this file does not depend on L10n.
+    @MainActor
     var displayName: String {
         ThemeRegistry.shared.displayName(for: self)
     }
