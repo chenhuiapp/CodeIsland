@@ -19,10 +19,25 @@ final class AppThemeRegistry: ObservableObject {
 
     private let store: AppThemeStore
     private var cancellables: Set<AnyCancellable> = []
+    private var hasSeenPlugins = false
 
     init(store: AppThemeStore = .shared) {
         self.store = store
         self.availableThemes = Self.builtInDescriptors
+
+        // React to plugin lifecycle changes after init. dropFirst() skips
+        // the @Published replay of the current value (whatever it is at
+        // subscribe time) — we only care about subsequent emissions, since
+        // tests inject bundles directly and production code wires this up
+        // after NativePluginManager has had a chance to populate.
+        NativePluginManager.shared.$loadedPlugins
+            .dropFirst()
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.loadAll()
+                }
+            }
+            .store(in: &cancellables)
     }
 
     var themeIDs: [AppThemeID] { availableThemes.map(\.id) }
@@ -49,7 +64,8 @@ final class AppThemeRegistry: ObservableObject {
 
     /// Public entry point. Pass `nil` to read live state from
     /// `NativePluginManager.shared.loadedPlugins`; pass a list to inject
-    /// for tests. Reconciliation with the store is added in Task 8.
+    /// for tests. After rebuilding `availableThemes`, reconciles the
+    /// store's `activeThemeID` against what's now available.
     func loadAll(pluginBundles: [Bundle]? = nil) {
         var descriptors = Self.builtInDescriptors
         var seen = Set(descriptors.map(\.id))
@@ -63,6 +79,26 @@ final class AppThemeRegistry: ObservableObject {
         }
 
         availableThemes = descriptors
+
+        if !bundles.isEmpty {
+            hasSeenPlugins = true
+        }
+        reconcile()
+    }
+
+    /// Sync the store with the freshly rebuilt `availableThemes`:
+    /// - If the persisted active ID is found, re-activate (refreshes the
+    ///   palette in case the bundle just became reachable).
+    /// - If it's missing AND we've seen at least one non-empty plugin
+    ///   list, reset. (We don't reset on the cold-start empty list — the
+    ///   plugin may still be in flight.)
+    private func reconcile() {
+        guard let active = store.activeThemeID else { return }
+        if let descriptor = availableThemes.first(where: { $0.id == active }) {
+            store.activate(descriptor: descriptor)
+        } else if hasSeenPlugins {
+            store.reset()
+        }
     }
 
     private func decodeThemeDescriptor(from bundle: Bundle) -> AppThemeDescriptor? {
