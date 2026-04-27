@@ -256,6 +256,14 @@ enum Theme {
     static var sidebarActiveFill: Color {
         appPalette.sidebarSelected ?? resolver.primaryText.opacity(resolver.isRetroArcade ? 0.12 : 0.08)
     }
+    /// Text color shown ON the selected pill. Light themes (Tempo) need a
+    /// light value here so the selected row stays legible against
+    /// `sidebarActiveFill` — which itself can resolve to a high-saturation
+    /// dark color from the manifest. Falls back to `resolver.primaryText`
+    /// so non-App-Theme cases match main's behavior.
+    static var sidebarSelectedText: Color {
+        appPalette.sidebarSelectedText ?? resolver.primaryText
+    }
     // sidebarHoverFill has no App Theme equivalent — pure notch derivation.
     static var sidebarHoverFill: Color { resolver.primaryText.opacity(resolver.isRetroArcade ? 0.08 : 0.04) }
     static var sidebarBorder: Color {
@@ -430,11 +438,11 @@ private struct SystemSettingsContentView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "power")
                         .font(.system(size: 12))
-                        .foregroundColor(Theme.subtle)
+                        .foregroundColor(Theme.sidebarText.opacity(0.55))
                         .frame(width: 18)
                     Text(L10n.isChinese ? "退出" : "Quit")
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(Theme.subtleStrong)
+                        .foregroundColor(Theme.sidebarText.opacity(0.7))
                     Spacer()
                 }
                 .padding(.horizontal, 14)
@@ -522,11 +530,11 @@ private struct SidebarPillRow: View {
             HStack(spacing: 10) {
                 Image(systemName: icon)
                     .font(.system(size: 12))
-                    .foregroundColor(isSelected ? Theme.accent : Theme.subtle)
+                    .foregroundColor(isSelected ? Theme.accent : Theme.sidebarText.opacity(0.55))
                     .frame(width: 18)
                 Text(label)
                     .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
-                    .foregroundColor(isSelected ? Theme.detailText : Theme.subtleStrong)
+                    .foregroundColor(isSelected ? Theme.sidebarSelectedText : Theme.sidebarText.opacity(0.7))
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 10)
