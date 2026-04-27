@@ -20,24 +20,17 @@ struct AppThemePickerCard: View {
     ]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("App Theme")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(Theme.detailText)
-                Text("Restyles the Settings window. Independent of the notch theme.")
-                    .font(.system(size: 11))
-                    .foregroundColor(Theme.subtle)
-            }
-
-            LazyVGrid(columns: columns, spacing: 10) {
-                ForEach(registry.availableThemes) { descriptor in
-                    AppThemePreviewTile(
-                        descriptor: descriptor,
-                        isSelected: store.activeThemeID == descriptor.id
-                    ) {
-                        store.activate(descriptor: descriptor)
-                    }
+        // No inline header — the parent `SettingsCard(title: "App Theme")`
+        // owns the section label so the App Theme picker reads as a sibling
+        // to the SCREEN and NOTCH sections rather than introducing a
+        // second header style.
+        LazyVGrid(columns: columns, spacing: 10) {
+            ForEach(registry.availableThemes) { descriptor in
+                AppThemePreviewTile(
+                    descriptor: descriptor,
+                    isSelected: store.activeThemeID == descriptor.id
+                ) {
+                    store.activate(descriptor: descriptor)
                 }
             }
         }
@@ -103,23 +96,26 @@ private struct AppThemePreviewTile: View {
 
                 Text(descriptor.displayName)
                     .font(.system(size: 11, weight: isSelected ? .semibold : .medium))
-                    .foregroundColor(isSelected ? Theme.detailText : Theme.subtleStrong)
+                    .foregroundColor(isSelected ? Theme.detailText : Theme.subtle)
                     .lineLimit(1)
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
+            // Tile bg is a subtle overlay on top of the parent SettingsCard
+            // (matches NotchCustomizationSettingsView's ThemePreviewCard:
+            // `currentTheme.overlay.opacity(0.08)`). Theme.controlFill on
+            // this branch resolves to `resolver.overlay.opacity(0.18)` so
+            // it nests naturally without painting another full card.
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(isSelected
-                          ? Theme.accent.opacity(0.12)
-                          : (isHovered
-                             ? Theme.cardFill.opacity(1.4)
-                             : Theme.cardFill))
+                          ? previewAccent.opacity(0.12)
+                          : (isHovered ? Theme.iconTileFill : Theme.controlFill))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .strokeBorder(
-                        isSelected ? Theme.accent : Theme.cardBorder,
+                        isSelected ? previewAccent : Theme.cardBorder,
                         lineWidth: isSelected ? 1.5 : 0.5
                     )
             )

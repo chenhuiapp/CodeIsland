@@ -1128,8 +1128,10 @@ private struct AppearanceTab: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             // App Theme picker — restyles the Settings window only.
-            // Independent of the notch theme below.
-            SettingsCard {
+            // Independent of the notch theme below. Title lives in the
+            // SettingsCard chrome so the section reads as a sibling to
+            // SCREEN and NOTCH (uppercase tracking-style header).
+            SettingsCard(title: L10n.appThemeSectionHeader) {
                 AppThemePickerCard()
             }
 

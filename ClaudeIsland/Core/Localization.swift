@@ -510,6 +510,7 @@ enum L10n {
     // and match the voice of surrounding entries. A future migration
     // to `.xcstrings` can pick them up mechanically from this file.
 
+    static var appThemeSectionHeader: String { tr("App Theme", "应用主题") }
     static var notchSectionHeader: String { tr("Notch", "灵动岛") }
     static var notchTheme: String { tr("Theme", "主题") }
     // v2 theme line-up (2026-04-20): Classic + six themes designed via
