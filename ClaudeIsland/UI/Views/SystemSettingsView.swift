@@ -231,26 +231,42 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 /// `~/Desktop/1_files/UI.jsx` and the System Settings HTML mock.
 enum Theme {
     private static var resolver: ThemeResolver { settingsTheme() }
+    private static var appPalette: AppThemePalette { AppThemeStore.shared.palette }
 
-    // Sidebar / detail surfaces now derive from the global semantic theme.
-    static var sidebarFill: Color { resolver.overlay.opacity(resolver.isRetroArcade ? 0.92 : 0.94) }
-    static var sidebarText: Color { resolver.primaryText }
-    static var sidebarActiveFill: Color { resolver.primaryText.opacity(resolver.isRetroArcade ? 0.12 : 0.08) }
+    // Sidebar / detail surfaces derive from the App Theme palette when an
+    // App Theme is active; any role left nil falls through to the notch
+    // theme derivation (so "no app theme" matches main's behavior exactly).
+    static var sidebarFill: Color {
+        appPalette.sidebarFill ?? resolver.overlay.opacity(resolver.isRetroArcade ? 0.92 : 0.94)
+    }
+    static var sidebarText: Color {
+        appPalette.sidebarText ?? resolver.primaryText
+    }
+    static var sidebarActiveFill: Color {
+        appPalette.sidebarSelected ?? resolver.primaryText.opacity(resolver.isRetroArcade ? 0.12 : 0.08)
+    }
+    // sidebarHoverFill has no App Theme equivalent — pure notch derivation.
     static var sidebarHoverFill: Color { resolver.primaryText.opacity(resolver.isRetroArcade ? 0.08 : 0.04) }
-    static var sidebarBorder: Color { resolver.border.opacity(resolver.isRetroArcade ? 0.3 : 0.16) }
+    static var sidebarBorder: Color {
+        appPalette.sidebarBorder ?? resolver.border.opacity(resolver.isRetroArcade ? 0.3 : 0.16)
+    }
 
-    static var detailFill: Color { resolver.background }
-    static var detailText: Color { resolver.primaryText }
-    static var border: Color { resolver.border }
+    static var detailFill: Color { appPalette.detailFill ?? resolver.background }
+    static var detailText: Color { appPalette.detailText ?? resolver.primaryText }
+    static var border: Color { appPalette.cardBorder ?? resolver.border }
 
-    static var cardFill: Color { resolver.overlay.opacity(resolver.isRetroArcade ? 0.18 : 0.32) }
-    static var cardBorder: Color { resolver.border.opacity(resolver.isRetroArcade ? 0.32 : 0.22) }
+    static var cardFill: Color {
+        appPalette.cardFill ?? resolver.overlay.opacity(resolver.isRetroArcade ? 0.18 : 0.32)
+    }
+    static var cardBorder: Color {
+        appPalette.cardBorder ?? resolver.border.opacity(resolver.isRetroArcade ? 0.32 : 0.22)
+    }
     static var rowDivider: Color { resolver.border.opacity(resolver.isRetroArcade ? 0.22 : 0.16) }
-    static var subtle: Color { resolver.mutedText }
+    static var subtle: Color { appPalette.subtle ?? resolver.mutedText }
     static var subtleStrong: Color { resolver.secondaryText }
 
-    // Accent now follows semantic working/done emphasis instead of a fixed lime.
-    static var accent: Color { resolver.doneColor }
+    // Accent: App Theme accent overrides notch's done-color derivation.
+    static var accent: Color { appPalette.accent ?? resolver.doneColor }
     static var controlFill: Color { resolver.overlay.opacity(resolver.isRetroArcade ? 0.14 : 0.18) }
     static var controlBorder: Color { resolver.border.opacity(resolver.isRetroArcade ? 0.28 : 0.22) }
     static var iconTileFill: Color { resolver.overlay.opacity(resolver.isRetroArcade ? 0.16 : 0.18) }
@@ -292,6 +308,9 @@ private struct SystemSettingsContentView: View {
     /// so SwiftUI has no dependency edge and skips invalidation — users
     /// had to click a sidebar tab to force a re-render.
     @ObservedObject private var notchStore = NotchCustomizationStore.shared
+    /// Same rationale as `notchStore` — the App Theme palette also drives
+    /// `Theme.*` reads, so we need an observed dependency edge.
+    @ObservedObject private var appThemeStore = AppThemeStore.shared
 
     init(
         initialTab: SettingsTab = .general,
@@ -324,6 +343,10 @@ private struct SystemSettingsContentView: View {
         )
         .shadow(color: Theme.shadow, radius: 30, y: 12)
         .onHover { isHoveringTitleBar = $0 }
+        // App Theme may declare a preferred light/dark scheme. Passing nil
+        // (when no app theme is active) is a no-op — system mode flows
+        // through.
+        .preferredColorScheme(appThemeStore.palette.colorScheme)
     }
 
     // MARK: Title bar
