@@ -77,9 +77,21 @@ import UserNotifications
         // Initialize Sparkle auto-updater
         _ = UpdaterManager.shared
 
+        // Initialize the App Theme registry BEFORE NativePluginManager
+        // populates loadedPlugins. The registry uses Combine + dropFirst()
+        // to ignore the initial empty replay, then react to subsequent
+        // mutations. Subscribing after NativePluginManager.loadAll() would
+        // miss the populated emission and the registry would never see
+        // plugin themes (until the next install/uninstall event).
+        _ = AppThemeRegistry.shared
+
         // Load native plugins from ~/.config/codeisland/plugins/
         NativePluginManager.shared.loadAll()
         ThemeRegistry.shared.loadAll()
+        // Defense in depth: explicitly drive the App Theme registry once
+        // after the manager has populated. Idempotent if the Combine sink
+        // already ran.
+        AppThemeRegistry.shared.loadAll()
 
         // Initialize CodeLight sync (connects to server if configured)
         _ = SyncManager.shared

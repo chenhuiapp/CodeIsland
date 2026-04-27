@@ -111,6 +111,7 @@ final class SystemSettingsWindow {
             onClose: { self.close() },
             onHide: { self.hide() }
         )
+        .appThemed()
         let hostingView = NSHostingView(rootView: contentView)
         let w = KeyableSettingsWindow(
             contentRect: NSRect(x: 0, y: 0, width: 960, height: 720),
