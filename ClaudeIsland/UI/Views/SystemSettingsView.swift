@@ -282,7 +282,19 @@ enum Theme {
     }
     static var rowDivider: Color { resolver.border.opacity(resolver.isRetroArcade ? 0.22 : 0.16) }
     static var subtle: Color { appPalette.subtle ?? resolver.mutedText }
-    static var subtleStrong: Color { resolver.secondaryText }
+    /// "Strong" muted-but-still-legible text. App-theme aware: when an
+    /// app theme provides a detail.text we render that hex at 0.85 opacity
+    /// so it reads as a slightly muted version of the primary text without
+    /// inverting contrast (which is what happens if we keep using the
+    /// notch theme's secondaryText — Classic's white over Tempo's cream
+    /// sidebar/cards yields ~1.3:1, effectively invisible). Falls back to
+    /// resolver.secondaryText so non-App-Theme cases match main exactly.
+    static var subtleStrong: Color {
+        if let dt = appPalette.detailText {
+            return dt.opacity(0.85)
+        }
+        return resolver.secondaryText
+    }
 
     // Accent: App Theme accent overrides notch's done-color derivation.
     static var accent: Color { appPalette.accent ?? resolver.doneColor }
